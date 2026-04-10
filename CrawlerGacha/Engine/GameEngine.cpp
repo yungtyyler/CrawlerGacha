@@ -10,7 +10,6 @@
 #include <algorithm>
 
 static int nextInstanceId = 1;
-constexpr int MAX_CARDS = 7;
 constexpr int NUM_SKILLS_PER_CHARACTER_IN_DECK = 5;
 constexpr int DAMAGE_SCALE_ON_UPGRADE = 2;
 constexpr int TIER_INCREASE_ON_UPGRADE = 1;
@@ -67,8 +66,8 @@ void initializeBattle(BattleState& state) {
     state.enemyParty.push_back(guard);
     
     // 5. Initialize the Rules
-    state.maxActionPoints = 3;
-    state.currentActionPoints = 3;
+    state.maxActionPoints = static_cast<int>(state.playerParty.size());
+    state.currentActionPoints = static_cast<int>(state.playerParty.size());
     state.currentTargetIndex = 0;
     state.currentPhase = GamePhase::PlayerTurn;
     
@@ -81,9 +80,11 @@ void initializeDeck(BattleState& state) {
     state.drawPile.clear();
     
     for (const auto& character : state.playerParty) {
-        for (const auto& skill : character.characterSkills) {
-            for (int i = 0; i < NUM_SKILLS_PER_CHARACTER_IN_DECK; ++i) {
-                state.drawPile.push_back(skill);
+        if (character.health > 0) {
+            for (const auto& skill : character.characterSkills) {
+                for (int i = 0; i < NUM_SKILLS_PER_CHARACTER_IN_DECK; ++i) {
+                    state.drawPile.push_back(skill);
+                }
             }
         }
     }
@@ -94,8 +95,15 @@ void initializeDeck(BattleState& state) {
 };
 
 void drawCards(BattleState& state, int amount) {
+    int aliveCount = 0;
+    for (const auto& player : state.playerParty) {
+        if (player.health > 0) aliveCount++;
+    }
+    
+    int dynamicMaxCards = (aliveCount > 1) ? 7 : 4;
+    
     for (int i = 0; i < amount; ++i) {
-        if (state.currentHand.size() >= MAX_CARDS) {
+        if (state.currentHand.size() >= dynamicMaxCards) {
             break;
         }
         
@@ -113,7 +121,7 @@ void drawCards(BattleState& state, int amount) {
             state.currentHand.push_back(cardToDraw);
         }
     }
-};
+}
 
 void checkAndMergeCards(BattleState& state) {
     // If we have 1 or 0 cards, it is mathematically impossible to merge.
@@ -290,12 +298,21 @@ void executeEnemyTurn(BattleState& state) {
     
     purgeDeadCharacterCards(state);
     
+    int aliveCount = 0;
+    for (const auto& player : state.playerParty) {
+        if (player.health > 0) aliveCount++;
+    }
+    
+    state.maxActionPoints = aliveCount;
     state.currentActionPoints = state.maxActionPoints;
     
-    int missingCards = 7 - static_cast<int>(state.currentHand.size());
+    int dynamicMaxCards = (aliveCount > 1) ? 7 : 4;
+    int missingCards = dynamicMaxCards - static_cast<int>(state.currentHand.size());
+    
     if (missingCards > 0) {
         drawCards(state, missingCards);
     }
+    
     checkAndMergeCards(state);
     
     state.currentPhase = GamePhase::PlayerTurn;

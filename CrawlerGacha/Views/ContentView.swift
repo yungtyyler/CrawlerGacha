@@ -53,6 +53,7 @@ struct ContentView: View {
                         currentActionPoints = bridge.getCurrentActionPoints()
                         currentPhase = bridge.getCurrentPhase()
                         currentTargetIndex = bridge.getCurrentTargetIndex()
+                        maxActionPoints = bridge.getMaxActionPoints()
                     }
                 }
             }
