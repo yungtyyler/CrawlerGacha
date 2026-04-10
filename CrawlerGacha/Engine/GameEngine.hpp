@@ -7,21 +7,22 @@
 
 #include "GameTypes.hpp"
 
-// --- COMBAT LOGIC ---
-void setTarget(BattleState& state, int enemyIndex);
-void executeEnemyTurn(BattleState& state);
-void checkWinCondition(BattleState& state);
-void executeQueue(BattleState& state);
-void endTurn(BattleState& state);
+// --- DECK LOGIC ---
+void initializeBattle(BattleState& state);
+void initializeDeck(BattleState& state);
+void drawCards(BattleState& state, int amount);
+void checkAndMergeCards(BattleState& state);
 
 // --- PLAYER ACTIONS ---
 void skipAction(BattleState& state);
 void queueCard(BattleState& state, int handIndex);
 void moveCard(BattleState& state, int fromIndex, int toIndex);
 
-// --- DECK LOGIC ---
-void initializeDeck(BattleState& state);
-void drawCards(BattleState& state, int amount);
-void checkAndMergeCards(BattleState& state);
+// --- COMBAT LOGIC ---
+void setTarget(BattleState& state, int enemyIndex);
+void executeEnemyTurn(BattleState& state);
+void checkWinCondition(BattleState& state);
+void executeQueue(BattleState& state);
+void endTurn(BattleState& state);
 
 #endif /* GameEngine_hpp */

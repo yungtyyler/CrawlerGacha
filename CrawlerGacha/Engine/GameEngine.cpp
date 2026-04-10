@@ -15,6 +15,67 @@ constexpr int NUM_SKILLS_PER_CHARACTER_IN_DECK = 5;
 constexpr int DAMAGE_SCALE_ON_UPGRADE = 2;
 constexpr int TIER_INCREASE_ON_UPGRADE = 1;
 
+// ==========================================
+// 1. DECK LOGIC
+// ==========================================
+
+void initializeBattle(BattleState& state) {
+    // 1. Character: Carl
+    Character carl;
+    carl.characterId = 1;
+    carl.name = "Carl";
+    carl.maxHealth = 1000;
+    carl.health = 1000;
+    
+    SkillCard smush = {0, 101, "Smush", 1, false, 150};
+    SkillCard explosive = {0, 102, "Doomsday Device", 1, true, 5000};
+    carl.characterSkills.push_back(smush);
+    carl.characterSkills.push_back(explosive);
+    
+    // 2. Character: Princess Donut
+    Character donut;
+    donut.characterId = 2;
+    donut.name = "Princess Donut";
+    donut.maxHealth = 600;
+    donut.health = 600;
+    
+    SkillCard missile = {0, 103, "Magic Missile", 1, false, 100};
+    SkillCard goddammit = {0, 104, "Goddammit, Carl!", 1, false, 50};
+    donut.characterSkills.push_back(missile);
+    donut.characterSkills.push_back(goddammit);
+    
+    // 3. Enemies
+    Character scavenger;
+    scavenger.characterId = 999;
+    scavenger.name = "Syndicate Scavenger";
+    scavenger.maxHealth = 2500;
+    scavenger.health = 2500;
+    
+    Character guard;
+    guard.characterId = 998;
+    guard.name = "Syndicate Guard";
+    guard.maxHealth = 3000;
+    guard.health = 3000;
+    
+    // 4. Form the Parties
+    state.playerParty.clear();
+    state.playerParty.push_back(carl);
+    state.playerParty.push_back(donut);
+    
+    state.enemyParty.clear();
+    state.enemyParty.push_back(scavenger);
+    state.enemyParty.push_back(guard);
+    
+    // 5. Initialize the Rules
+    state.maxActionPoints = 3;
+    state.currentActionPoints = 3;
+    state.currentTargetIndex = 0;
+    state.currentPhase = GamePhase::PlayerTurn;
+    
+    // 6. Shuffle the deck
+    state.currentHand.clear();
+    initializeDeck(state);
+}
 
 void initializeDeck(BattleState& state) {
     state.drawPile.clear();
@@ -74,22 +135,9 @@ void checkAndMergeCards(BattleState& state) {
     }
 }
 
-void setTarget(BattleState& state, int enemyIndex) {
-    if (enemyIndex >= 0 && enemyIndex < static_cast<int>(state.enemyParty.size())) {
-        state.currentTargetIndex = enemyIndex;
-    }
-}
-
-void skipAction(BattleState& state) {
-    if (state.currentActionPoints <= 0) {
-        return;
-    }
-    
-    state.currentActionPoints -= 1;
-    
-    SkillCard skipReceipt = {0, -2, "Skip", 0, 0};
-    state.actionQueue.push_back(skipReceipt);
-}
+// ==========================================
+// 2. PLAYER ACTIONS
+// ==========================================
 
 void moveCard(BattleState& state, int fromIndex, int toIndex) {
     if (state.currentPhase != GamePhase::PlayerTurn) return;
@@ -112,6 +160,65 @@ void moveCard(BattleState& state, int fromIndex, int toIndex) {
     state.currentHand.insert(state.currentHand.begin() + toIndex, movingCard);
     
     checkAndMergeCards(state);
+}
+
+void queueCard(BattleState& state, int handIndex) {
+    if (state.currentPhase != GamePhase::PlayerTurn) return;
+    
+    if (state.currentActionPoints <= 0) return;
+    
+    if (handIndex < 0 || handIndex >= static_cast<int>(state.currentHand.size())) {
+        return;
+    }
+    
+    SkillCard cardToPlay = state.currentHand[handIndex];
+    state.currentHand.erase(state.currentHand.begin() + handIndex);
+    state.actionQueue.push_back(cardToPlay);
+    
+    state.currentActionPoints -= 1;
+    
+    checkAndMergeCards(state);
+}
+
+void skipAction(BattleState& state) {
+    if (state.currentActionPoints <= 0) {
+        return;
+    }
+    
+    state.currentActionPoints -= 1;
+    
+    SkillCard skipReceipt = {0, -2, "Skip", 0, 0};
+    state.actionQueue.push_back(skipReceipt);
+}
+
+// ==========================================
+// 3. COMBAT & PHASE LOGIC
+// ==========================================
+
+void setTarget(BattleState& state, int enemyIndex) {
+    if (enemyIndex >= 0 && enemyIndex < static_cast<int>(state.enemyParty.size())) {
+        state.currentTargetIndex = enemyIndex;
+    }
+}
+
+void checkWinCondition(BattleState& state) {
+    bool allEnemiesDead = true;
+    for (const auto& enemy : state.enemyParty) {
+        if (enemy.health > 0) allEnemiesDead = false;
+    }
+    if (allEnemiesDead) {
+        state.currentPhase = GamePhase::Victory;
+        return;
+    }
+
+    bool allPlayersDead = true;
+    for (const auto& player : state.playerParty) {
+        if (player.health > 0) allPlayersDead = false;
+    }
+    if (allPlayersDead) {
+        state.currentPhase = GamePhase::Defeat;
+        return;
+    }
 }
 
 void executeQueue(BattleState& state) {
@@ -170,42 +277,4 @@ void executeEnemyTurn(BattleState& state) {
     
     state.currentPhase = GamePhase::PlayerTurn;
     checkWinCondition(state);
-}
-
-void queueCard(BattleState& state, int handIndex) {
-    if (state.currentPhase != GamePhase::PlayerTurn) return;
-    
-    if (state.currentActionPoints <= 0) return;
-    
-    if (handIndex < 0 || handIndex >= static_cast<int>(state.currentHand.size())) {
-        return;
-    }
-    
-    SkillCard cardToPlay = state.currentHand[handIndex];
-    state.currentHand.erase(state.currentHand.begin() + handIndex);
-    state.actionQueue.push_back(cardToPlay);
-    
-    state.currentActionPoints -= 1;
-    
-    checkAndMergeCards(state);
-}
-
-void checkWinCondition(BattleState& state) {
-    bool allEnemiesDead = true;
-    for (const auto& enemy : state.enemyParty) {
-        if (enemy.health > 0) allEnemiesDead = false;
-    }
-    if (allEnemiesDead) {
-        state.currentPhase = GamePhase::Victory;
-        return;
-    }
-
-    bool allPlayersDead = true;
-    for (const auto& player : state.playerParty) {
-        if (player.health > 0) allPlayersDead = false;
-    }
-    if (allPlayersDead) {
-        state.currentPhase = GamePhase::Defeat;
-        return;
-    }
 }

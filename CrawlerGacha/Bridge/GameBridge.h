@@ -6,28 +6,9 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "BridgeModels.h"
 
 NS_ASSUME_NONNULL_BEGIN
-
-@interface IOSSkillCard : NSObject
-
-@property (nonatomic, assign) NSInteger instanceId;
-@property (nonatomic, assign) NSInteger cardId;
-@property (nonatomic, strong) NSString *name;
-@property (nonatomic, assign) NSInteger tier;
-@property (nonatomic, assign) NSInteger baseDamage;
-@property (nonatomic, assign) BOOL isAoE;
-
-@end
-
-@interface IOSCharacter : NSObject
-
-@property (nonatomic, assign) NSInteger characterId;
-@property (nonatomic, strong) NSString *name;
-@property (nonatomic, assign) NSInteger maxHealth;
-@property (nonatomic, assign) NSInteger health;
-
-@end
 
 @interface GameBridge : NSObject
 
