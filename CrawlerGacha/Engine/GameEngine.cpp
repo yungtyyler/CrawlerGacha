@@ -116,6 +116,12 @@ void drawCards(BattleState& state, int amount) {
 };
 
 void checkAndMergeCards(BattleState& state) {
+    // If we have 1 or 0 cards, it is mathematically impossible to merge.
+    // Kick out immediately to prevent unsigned integer underflow!
+    if (state.currentHand.size() < 2) {
+        return;
+    }
+    
     bool merged = true;
     
     while (merged) {
@@ -197,7 +203,9 @@ void skipAction(BattleState& state) {
 
 void setTarget(BattleState& state, int enemyIndex) {
     if (enemyIndex >= 0 && enemyIndex < static_cast<int>(state.enemyParty.size())) {
-        state.currentTargetIndex = enemyIndex;
+        if (state.enemyParty[enemyIndex].health > 0) {
+            state.currentTargetIndex = enemyIndex;
+        }
     }
 }
 
@@ -224,21 +232,34 @@ void checkWinCondition(BattleState& state) {
 void executeQueue(BattleState& state) {
     if (state.enemyParty.empty()) return;
 
-    if (state.currentTargetIndex < 0 || state.currentTargetIndex >= static_cast<int>(state.enemyParty.size())) {
-        state.currentTargetIndex = 0;
-    }
-
     for (const auto& action : state.actionQueue) {
-        if (action.id > 0) {
+        if (action.id > 0) { // If it's a real attack
+            
+            // 1. AUTO-SNAP: If our target is dead, find the next living enemy!
+            if (state.enemyParty[state.currentTargetIndex].health <= 0) {
+                for (int i = 0; i < static_cast<int>(state.enemyParty.size()); ++i) {
+                    if (state.enemyParty[i].health > 0) {
+                        state.currentTargetIndex = i;
+                        break;
+                    }
+                }
+            }
+
+            // 2. DEAL DAMAGE
             if (action.isAoE) {
                 for (auto& enemy : state.enemyParty) {
-                    enemy.health -= action.baseDamage;
-                    if (enemy.health < 0) enemy.health = 0;
+                    if (enemy.health > 0) { // Don't hit corpses
+                        enemy.health -= action.baseDamage;
+                        if (enemy.health < 0) enemy.health = 0;
+                    }
                 }
             } else {
-                state.enemyParty[state.currentTargetIndex].health -= action.baseDamage;
-                if (state.enemyParty[state.currentTargetIndex].health < 0) {
-                    state.enemyParty[state.currentTargetIndex].health = 0;
+                // Double check that we actually found a living target
+                if (state.enemyParty[state.currentTargetIndex].health > 0) {
+                    state.enemyParty[state.currentTargetIndex].health -= action.baseDamage;
+                    if (state.enemyParty[state.currentTargetIndex].health < 0) {
+                        state.enemyParty[state.currentTargetIndex].health = 0;
+                    }
                 }
             }
         }

@@ -39,6 +39,7 @@ struct ContentView: View {
                     enemyParty = bridge.getEnemyParty()
                     actionQueue = bridge.getActionQueue()
                     currentPhase = bridge.getCurrentPhase()
+                    currentTargetIndex = bridge.getCurrentTargetIndex()
                 }
                 
                 if bridge.getCurrentPhase() == 2 { return }
@@ -51,6 +52,7 @@ struct ContentView: View {
                         currentHand = bridge.getCurrentHand()
                         currentActionPoints = bridge.getCurrentActionPoints()
                         currentPhase = bridge.getCurrentPhase()
+                        currentTargetIndex = bridge.getCurrentTargetIndex()
                     }
                 }
             }
@@ -66,6 +68,8 @@ struct ContentView: View {
                         CharacterSpriteView(character: enemy, isEnemy: true, isTargeted: index == currentTargetIndex)
                             .onTapGesture {
                                 if currentPhase != 0 { return }
+                                if enemy.health <= 0 { return }
+                                
                                 bridge.setTargetIndex(index)
                                 withAnimation(.spring(response: 0.3)) {
                                     currentTargetIndex = bridge.getCurrentTargetIndex()

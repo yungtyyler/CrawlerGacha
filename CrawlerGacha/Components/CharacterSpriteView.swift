@@ -31,7 +31,7 @@ struct CharacterSpriteView: View {
                     .multilineTextAlignment(.center)
                     .padding(4)
                 
-                if isEnemy && isTargeted {
+                if isEnemy && isTargeted && character.health > 0 {
                     Image(systemName: "scope")
                         .font(.system(size: 40, weight: .thin))
                         .foregroundColor(.yellow)
