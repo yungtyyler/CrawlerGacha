@@ -5,66 +5,23 @@
 #ifndef GameEngine_hpp
 #define GameEngine_hpp
 
-#include <string>
-#include <vector>
+#include "GameTypes.hpp"
 
-enum class GamePhase {
-    PlayerTurn,  // 0
-    EnemyTurn,   // 1
-    Victory,     // 2
-    Defeat       // 3
-};
-
-struct SkillCard {
-    int instanceId;       // Unique serial number for this exact physical card
-    int id;               // The type of skill (e.g., 101)
-    std::string name;
-    int tier;
-    
-    bool isAoE;
-    int baseDamage;
-    
-    bool canMergeWith(const SkillCard& otherCard) const {
-        return (id == otherCard.id) && (tier == otherCard.tier) && (tier < 3);
-    }
-};
-
-struct Character {
-    int characterId;
-    std::string name;
-    
-    int maxHealth;
-    int health;
-    
-    std::vector<SkillCard> characterSkills;
-};
-
-struct BattleState {
-    std::vector<Character> playerParty;
-    std::vector<Character> enemyParty;
-    
-    std::vector<SkillCard> drawPile;
-    std::vector<SkillCard> currentHand;
-    
-    std::vector<SkillCard> actionQueue;
-    
-    int maxActionPoints;
-    int currentActionPoints;
-    int currentTargetIndex;
-    
-    GamePhase currentPhase;
-};
-
+// --- COMBAT LOGIC ---
 void setTarget(BattleState& state, int enemyIndex);
 void executeEnemyTurn(BattleState& state);
-void skipAction(BattleState& state);
-void queueCard(BattleState& state, int handIndex);
+void checkWinCondition(BattleState& state);
 void executeQueue(BattleState& state);
 void endTurn(BattleState& state);
+
+// --- PLAYER ACTIONS ---
+void skipAction(BattleState& state);
+void queueCard(BattleState& state, int handIndex);
+void moveCard(BattleState& state, int fromIndex, int toIndex);
+
+// --- DECK LOGIC ---
 void initializeDeck(BattleState& state);
 void drawCards(BattleState& state, int amount);
 void checkAndMergeCards(BattleState& state);
-void moveCard(BattleState& state, int fromIndex, int toIndex);
-void checkWinCondition(BattleState& state);
 
 #endif /* GameEngine_hpp */
