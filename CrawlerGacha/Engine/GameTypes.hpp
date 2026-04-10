@@ -23,6 +23,7 @@ enum class GamePhase {
 struct SkillCard {
     int instanceId;
     int id;
+    int ownerId;
     std::string name;
     int tier;
     bool isAoE;

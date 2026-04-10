@@ -12,6 +12,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface IOSSkillCard : NSObject
 @property (nonatomic, assign) NSInteger instanceId;
 @property (nonatomic, assign) NSInteger cardId;
+@property (nonatomic, assign) NSInteger ownerId;
 @property (nonatomic, strong) NSString *name;
 @property (nonatomic, assign) NSInteger tier;
 @property (nonatomic, assign) NSInteger baseDamage;

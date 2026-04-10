@@ -27,8 +27,8 @@ void initializeBattle(BattleState& state) {
     carl.maxHealth = 1000;
     carl.health = 1000;
     
-    SkillCard smush = {0, 101, "Smush", 1, false, 150};
-    SkillCard explosive = {0, 102, "Doomsday Device", 1, true, 5000};
+    SkillCard smush = {0, 101, 1, "Smush", 1, false, 300};
+    SkillCard explosive = {0, 102, 1, "Doomsday Device", 1, true, 800};
     carl.characterSkills.push_back(smush);
     carl.characterSkills.push_back(explosive);
     
@@ -39,8 +39,8 @@ void initializeBattle(BattleState& state) {
     donut.maxHealth = 600;
     donut.health = 600;
     
-    SkillCard missile = {0, 103, "Magic Missile", 1, false, 100};
-    SkillCard goddammit = {0, 104, "Goddammit, Carl!", 1, false, 50};
+    SkillCard missile = {0, 103, 2, "Magic Missile", 1, false, 600};
+    SkillCard goddammit = {0, 104, 2, "Goddammit, Carl!", 1, false, 200};
     donut.characterSkills.push_back(missile);
     donut.characterSkills.push_back(goddammit);
     
@@ -152,7 +152,7 @@ void moveCard(BattleState& state, int fromIndex, int toIndex) {
     
     state.currentActionPoints -= 1;
     
-    SkillCard moveReceipt = {0, -1, "Move", 0, 0};
+    SkillCard moveReceipt = {0, -1, 0, "Move", 0, false, 0};
     state.actionQueue.push_back(moveReceipt);
 
     SkillCard movingCard = state.currentHand[fromIndex];
@@ -187,7 +187,7 @@ void skipAction(BattleState& state) {
     
     state.currentActionPoints -= 1;
     
-    SkillCard skipReceipt = {0, -2, "Skip", 0, 0};
+    SkillCard skipReceipt = {0, -2, 0, "Skip", 0, false, 0};
     state.actionQueue.push_back(skipReceipt);
 }
 
@@ -267,6 +267,8 @@ void executeEnemyTurn(BattleState& state) {
         }
     }
     
+    purgeDeadCharacterCards(state);
+    
     state.currentActionPoints = state.maxActionPoints;
     
     int missingCards = 7 - static_cast<int>(state.currentHand.size());
@@ -277,4 +279,20 @@ void executeEnemyTurn(BattleState& state) {
     
     state.currentPhase = GamePhase::PlayerTurn;
     checkWinCondition(state);
+}
+
+void purgeDeadCharacterCards(BattleState& state) {
+    std::vector<int> aliveIds;
+    for (const auto& player : state.playerParty) {
+        if (player.health > 0) aliveIds.push_back(player.characterId);
+    }
+    
+    auto isCardDead = [&](const SkillCard& card) {
+        if (card.id < 0) return false;
+        return std::find(aliveIds.begin(), aliveIds.end(), card.ownerId) == aliveIds.end();
+    };
+    
+    state.currentHand.erase(std::remove_if(state.currentHand.begin(), state.currentHand.end(), isCardDead), state.currentHand.end());
+    state.drawPile.erase(std::remove_if(state.drawPile.begin(), state.drawPile.end(), isCardDead), state.drawPile.end());
+    state.actionQueue.erase(std::remove_if(state.actionQueue.begin(), state.actionQueue.end(), isCardDead), state.actionQueue.end());
 }

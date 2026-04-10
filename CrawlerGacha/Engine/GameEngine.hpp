@@ -24,5 +24,6 @@ void executeEnemyTurn(BattleState& state);
 void checkWinCondition(BattleState& state);
 void executeQueue(BattleState& state);
 void endTurn(BattleState& state);
+void purgeDeadCharacterCards(BattleState& state);
 
 #endif /* GameEngine_hpp */

@@ -65,6 +65,7 @@ struct ContentView: View {
                     ForEach(Array(enemyParty.enumerated()), id: \.element.characterId) { index, enemy in
                         CharacterSpriteView(character: enemy, isEnemy: true, isTargeted: index == currentTargetIndex)
                             .onTapGesture {
+                                if currentPhase != 0 { return }
                                 bridge.setTargetIndex(index)
                                 withAnimation(.spring(response: 0.3)) {
                                     currentTargetIndex = bridge.getCurrentTargetIndex()
@@ -87,6 +88,7 @@ struct ContentView: View {
                 
                 // 3. ACTION QUEUE (Using our new component)
                 ActionQueueView(maxActionPoints: maxActionPoints, actionQueue: actionQueue) {
+                    if currentPhase != 0 { return }
                     bridge.skipAction()
                     withAnimation(.spring(response: 0.35, dampingFraction: 0.6)) {
                         actionQueue = bridge.getActionQueue()
@@ -100,6 +102,7 @@ struct ContentView: View {
                     ForEach(currentHand, id: \.instanceId) { card in
                         SkillCardView(card: card)
                             .onTapGesture {
+                                if currentPhase != 0 { return }
                                 guard let index = currentHand.firstIndex(of: card) else { return }
                                 bridge.queueCard(at: index)
                                 
@@ -120,10 +123,12 @@ struct ContentView: View {
                             .gesture(
                                 DragGesture(minimumDistance: 0)
                                     .onChanged { value in
+                                        if currentPhase != 0 { return }
                                         if draggingCard == nil { draggingCard = card }
                                         dragOffset = value.translation
                                     }
                                     .onEnded { value in
+                                        if currentPhase != 0 { return }
                                         guard let currentIndex = currentHand.firstIndex(of: card) else { return }
                                         
                                         let approximateCardWidth = screenWidth / CGFloat(currentHand.count)

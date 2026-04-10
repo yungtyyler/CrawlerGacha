@@ -111,6 +111,7 @@
         IOSSkillCard *iosCard = [[IOSSkillCard alloc] init];
         iosCard.instanceId = cppCard.instanceId;
         iosCard.cardId = cppCard.id;
+        iosCard.ownerId = cppCard.ownerId;
         iosCard.name = [NSString stringWithUTF8String:cppCard.name.c_str()];
         iosCard.tier = cppCard.tier;
         iosCard.baseDamage = cppCard.baseDamage;
@@ -127,6 +128,7 @@
         IOSSkillCard *iosCard = [[IOSSkillCard alloc] init];
         iosCard.instanceId = cppCard.instanceId;
         iosCard.cardId = cppCard.id;
+        iosCard.ownerId = cppCard.ownerId;
         iosCard.name = [NSString stringWithUTF8String:cppCard.name.c_str()];
         iosCard.tier = cppCard.tier;
         iosCard.baseDamage = cppCard.baseDamage;
